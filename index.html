@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Fun Tests</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <canvas id="canvas" width="1000" height="500" style="border:1px solid #000000;">
+        Your browser does not support the HTML canvas tag.
+    </canvas>
+    <p id="demo">Not selected yet</p>
+    <p id="number">No circles yet</p>
+
+    <button onclick="StartGravity()" id="startBtn">Start Gravity</button>
+    <button onclick="StopGravity()" id="stopBtn">Stop Gravity</button>
+    <script>
+        var circles = [];
+        var elementP = document.getElementById("demo");
+        var element = document.getElementById("canvas");
+        var startBtn = document.getElementById("startBtn");
+        var stopBtn = document.getElementById("stopBtn");
+        var Area = {
+
+            start: function () {
+                this.context = element.getContext("2d");
+                this.interval = setInterval(updateArea, 20);
+            },
+
+            stop: function () {
+                clearInterval(this.interval);
+            },
+
+            clear: function () {
+                this.context.clearRect(0, 0, element.width, element.height);
+            }
+        }
+
+        function StartGravity() {
+            console.log("Start Gravity");
+            startBtn.style.display = "none";
+            stopBtn.style.display = "block";
+            Area.start();
+        }
+
+        function StopGravity() {
+            console.log("Stop Gravity");
+            stopBtn.style.display = "none";
+            startBtn.style.display = "block";
+            Area.stop();
+        }
+
+
+        function circle(positionX, positionY, radius) {
+
+            this.x = positionX;
+            this.y = positionY;
+            this.radius = radius;
+            this.speedX = 0;
+            this.speedY = 0;
+
+            this.gravity = 0.05;
+            this.gravitySpeed = 0;
+            this.update = function () {
+                var ctx = element.getContext("2d");
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+                ctx.fillStyle = "#FF0000";
+                ctx.fill();
+            }
+
+            this.newPos = function () {
+                this.gravitySpeed += this.gravity;
+                this.x += this.speedX;
+                this.y += this.speedY + this.gravitySpeed;
+
+                var rockbottom = element.height - this.radius;
+
+                if(this.y > rockbottom)
+                {
+                    this.y = rockbottom;
+                }
+            }
+
+        }
+
+        function updateArea() {
+            Area.clear();
+            for (let index = 0; index < circles.length; index++) {
+                circles[index].newPos();
+                circles[index].update();
+            }
+
+
+        }
+
+        
+        document.getElementById("canvas").addEventListener("click", CircleAppear);
+        document.getElementById("canvas").addEventListener("mousemove", UpdateCoords);
+
+        function CircleAppear() {
+            var positionX = Math.floor(Math.random() * 1000);
+            var positionY = Math.floor(Math.random() * 500);
+
+            var x = event.clientX;
+            var y = event.clientY;
+            var coords = "X coords : " + x + ", Y coords : " + y;
+            var newCircle = new circle(x, y, 20);
+            circles.push(newCircle);
+            newCircle.update();
+
+            elementP.innerHTML = coords;
+
+
+            var elementNumber = document.getElementById("number");
+
+            var CircleNumber = circles.length;
+            elementNumber.innerHTML = "Currently " + CircleNumber;
+        }
+
+        function UpdateCoords() {
+            var x = event.clientX;
+            var y = event.clientY;
+            var coords = "X coords : " + x + ", Y coords : " + y;
+
+            elementP.innerHTML = coords;
+        }
+        
+        </script>
+
+
+
+
+</body>
+
+</html>
