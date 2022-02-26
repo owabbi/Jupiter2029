@@ -1,12 +1,12 @@
-*{
+* {
     margin: 0;
     padding: 0;
 }
 
-p{
+p {
     text-align: center;
 }
-#stopBtn
-{
+
+#startBtn {
     display: none;
 }

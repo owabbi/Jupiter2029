@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body onload="StartGravity()">
 
     <canvas id="canvas" width="1000" height="500" style="border:1px solid #000000;">
         Your browser does not support the HTML canvas tag.
@@ -17,6 +17,9 @@
     <button onclick="StartGravity()" id="startBtn">Start Gravity</button>
     <button onclick="StopGravity()" id="stopBtn">Stop Gravity</button>
     <script src="script.js"></script>
+
+    <label for="GumBall">Switch to GumBall</label>
+    <input type="checkbox" id="GumBall" onclick="SwitchToGumBall()">
 
 
 

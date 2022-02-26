@@ -3,10 +3,12 @@ var pCoords = document.getElementById("coords");
 var canvas = document.getElementById("canvas");
 var startBtn = document.getElementById("startBtn");
 var stopBtn = document.getElementById("stopBtn");
+var ctx = canvas.getContext("2d");
+var GumBallFlag = false;
+
 var Area = {
 
     start: function() {
-        this.context = canvas.getContext("2d");
         this.interval = setInterval(updateArea, 20);
     },
 
@@ -15,7 +17,7 @@ var Area = {
     },
 
     clear: function() {
-        this.context.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 }
 
@@ -34,25 +36,29 @@ function StopGravity() {
 }
 
 
-function circle(positionX, positionY, radius) {
+class circle {
+    constructor(positionX, positionY, radius) {
+        this.x = positionX;
+        this.y = positionY;
+        this.radius = radius;
+        this.color = "red";
+        this.speedX = 0;
+        this.speedY = 0;
 
-    this.x = positionX;
-    this.y = positionY;
-    this.radius = radius;
-    this.speedX = 0;
-    this.speedY = 0;
-
-    this.gravity = 0.05;
-    this.gravitySpeed = 0;
-    this.update = function() {
-        var ctx = canvas.getContext("2d");
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        ctx.fillStyle = "#FF0000";
-        ctx.fill();
+        this.gravity = 0.05;
+        this.gravitySpeed = 0;
     }
 
-    this.newPos = function() {
+    draw = function() {
+
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+
+    }
+
+    update = function() {
         this.gravitySpeed += this.gravity;
         this.x += this.speedX;
         this.y += this.speedY + this.gravitySpeed;
@@ -66,11 +72,66 @@ function circle(positionX, positionY, radius) {
 
 }
 
+class GumBall extends circle {
+
+    constructor(positionX, positionY, radius) {
+        super(positionX, positionY, radius);
+        this.speedX = Math.ceil(Math.random() * 2) * (Math.round(Math.random()) ? 1 : -1);
+        this.speedY = Math.ceil(Math.random() * 2) * (Math.round(Math.random()) ? 1 : -1);
+        this.color = "green";
+        this.gravity = 0;
+    }
+
+    addLines = function() {
+        var angleTheta = Math.acos(this.speedX / (Math.sqrt((this.speedX * this.speedX) + (this.speedY * this.speedY))));
+
+        ctx.beginPath();
+
+        ctx.moveTo(this.x, this.y);
+        if (this.speedY < 0) {
+            ctx.lineTo(this.x + this.radius * Math.cos(angleTheta), this.y + this.radius * Math.sin(angleTheta + Math.PI));
+        } else {
+
+            ctx.lineTo(this.x + this.radius * Math.cos(angleTheta), this.y + this.radius * Math.sin(angleTheta));
+        }
+        ctx.stroke();
+    }
+
+    update = function() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+
+        var rockbottom = canvas.height - this.radius;
+
+        var rightblock = canvas.width - this.radius;
+
+        if (this.y > rockbottom) {
+            this.y = rockbottom;
+            this.speedX = 0;
+        }
+
+        if (this.y < this.radius) {
+            this.y = this.radius;
+            this.speedX = 0;
+        }
+
+        if (this.x > rightblock) {
+            this.x = rightblock;
+            this.speedY = 0;
+        }
+
+        if (this.x < this.radius) {
+            this.x = this.radius;
+            this.speedY = 0;
+        }
+    }
+}
+
 function updateArea() {
     Area.clear();
     for (let index = 0; index < circles.length; index++) {
-        circles[index].newPos();
         circles[index].update();
+        circles[index].draw();
     }
 
 
@@ -87,9 +148,16 @@ function CircleAppear(event) {
     var x = event.clientX;
     var y = event.clientY;
     var coords = "X coords : " + x + ", Y coords : " + y;
-    var newCircle = new circle(x, y, 20);
-    circles.push(newCircle);
-    newCircle.update();
+    if (GumBallFlag == true) {
+        var newCircle = new GumBall(x, y, 20);
+        circles.push(newCircle);
+        newCircle.draw();
+        newCircle.addLines();
+    } else {
+        var newCircle = new circle(x, y, 20);
+        circles.push(newCircle);
+        newCircle.draw();
+    }
 
     pCoords.innerHTML = coords;
 
@@ -106,4 +174,14 @@ function UpdateCoords(event) {
     var coords = "X coords : " + x + ", Y coords : " + y;
 
     pCoords.innerHTML = coords;
+}
+
+function SwitchToGumBall() {
+    var GumBallCheck = document.getElementById("GumBall");
+    if (GumBallCheck.checked == true) {
+        GumBallFlag = true;
+    } else {
+        GumBallFlag = false
+    }
+
 }
