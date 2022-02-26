@@ -10,3 +10,7 @@ p {
 #startBtn {
     display: none;
 }
+
+#showArrow {
+    display: none;
+}

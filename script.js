@@ -5,6 +5,7 @@ var startBtn = document.getElementById("startBtn");
 var stopBtn = document.getElementById("stopBtn");
 var ctx = canvas.getContext("2d");
 var GumBallFlag = false;
+var GumBallArrowFlag = false;
 
 var Area = {
 
@@ -82,19 +83,24 @@ class GumBall extends circle {
         this.gravity = 0;
     }
 
-    addLines = function() {
-        var angleTheta = Math.acos(this.speedX / (Math.sqrt((this.speedX * this.speedX) + (this.speedY * this.speedY))));
-
+    draw = function() {
         ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.beginPath();
+        if (GumBallArrowFlag == true) {
+            var angleTheta = Math.acos(this.speedX / (Math.sqrt((this.speedX * this.speedX) + (this.speedY * this.speedY))));
+            ctx.moveTo(this.x, this.y);
+            if (this.speedY < 0) {
+                ctx.lineTo(this.x + this.radius * Math.cos(angleTheta), this.y + this.radius * Math.sin(angleTheta + Math.PI));
+            } else {
 
-        ctx.moveTo(this.x, this.y);
-        if (this.speedY < 0) {
-            ctx.lineTo(this.x + this.radius * Math.cos(angleTheta), this.y + this.radius * Math.sin(angleTheta + Math.PI));
-        } else {
-
-            ctx.lineTo(this.x + this.radius * Math.cos(angleTheta), this.y + this.radius * Math.sin(angleTheta));
+                ctx.lineTo(this.x + this.radius * Math.cos(angleTheta), this.y + this.radius * Math.sin(angleTheta));
+            }
+            ctx.stroke();
         }
-        ctx.stroke();
+
     }
 
     update = function() {
@@ -152,7 +158,6 @@ function CircleAppear(event) {
         var newCircle = new GumBall(x, y, 20);
         circles.push(newCircle);
         newCircle.draw();
-        newCircle.addLines();
     } else {
         var newCircle = new circle(x, y, 20);
         circles.push(newCircle);
@@ -178,10 +183,27 @@ function UpdateCoords(event) {
 
 function SwitchToGumBall() {
     var GumBallCheck = document.getElementById("GumBall");
+    var showArrow = document.getElementById("showArrow");
+    var GumBallArrow = document.getElementById("GumBallArrow");
     if (GumBallCheck.checked == true) {
         GumBallFlag = true;
+        showArrow.style.display = "block";
+        GumBallArrowFlag = true;
+        GumBallArrow.checked = true;
     } else {
         GumBallFlag = false
+        showArrow.style.display = "none";
+        GumBallArrowFlag = false
+    }
+
+}
+
+function ShowGumballArrows() {
+    var GumBallArrow = document.getElementById("GumBallArrow");
+    if (GumBallArrow.checked == true) {
+        GumBallArrowFlag = true;
+    } else {
+        GumBallArrowFlag = false;
     }
 
 }
