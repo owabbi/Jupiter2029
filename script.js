@@ -3,6 +3,7 @@ var pCoords = document.getElementById("coords");
 var canvas = document.getElementById("canvas");
 var startBtn = document.getElementById("startBtn");
 var stopBtn = document.getElementById("stopBtn");
+var elementNumber = document.getElementById("number");
 var ctx = canvas.getContext("2d");
 var GumBallFlag = false;
 var GumBallArrowFlag = false;
@@ -113,22 +114,22 @@ class GumBall extends circle {
 
         if (this.y > rockbottom) {
             this.y = rockbottom;
-            this.speedX = 0;
+            this.speedY = -this.speedY;
         }
 
         if (this.y < this.radius) {
             this.y = this.radius;
-            this.speedX = 0;
+            this.speedY = -this.speedY;
         }
 
         if (this.x > rightblock) {
             this.x = rightblock;
-            this.speedY = 0;
+            this.speedX = -this.speedX;
         }
 
         if (this.x < this.radius) {
             this.x = this.radius;
-            this.speedY = 0;
+            this.speedX = -this.speedX;
         }
     }
 }
@@ -167,8 +168,6 @@ function CircleAppear(event) {
     pCoords.innerHTML = coords;
 
 
-    var elementNumber = document.getElementById("number");
-
     var CircleNumber = circles.length;
     elementNumber.innerHTML = "Currently " + CircleNumber;
 }
@@ -204,6 +203,25 @@ function ShowGumballArrows() {
         GumBallArrowFlag = true;
     } else {
         GumBallArrowFlag = false;
+    }
+}
+
+function AddGumBalls(event) {
+    var GumBallNbr = document.getElementById("AddGumBallNbr").value;
+    if (GumBallNbr < 101) {
+        var counter = 0;
+        console.log(GumBallNbr);
+        while (counter != GumBallNbr) {
+            var positionX = Math.floor(Math.random() * 1000);
+            var positionY = Math.floor(Math.random() * 500);
+
+            var newCircle = new GumBall(positionX, positionY, 20);
+            circles.push(newCircle);
+            newCircle.draw();
+            counter++;
+            var CircleNumber = circles.length;
+            elementNumber.innerHTML = "Currently " + CircleNumber;
+        }
     }
 
 }
