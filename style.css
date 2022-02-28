@@ -15,3 +15,8 @@
 #showArrow {
     display: none;
 }
+
+canvas {
+    background-image: repeating-linear-gradient(#ccc 0 1px, transparent 1px 100%), repeating-linear-gradient(90deg, #ccc 0 1px, transparent 1px 100%);
+    background-size: 50px 50px;
+}

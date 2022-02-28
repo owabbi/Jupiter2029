@@ -94,6 +94,7 @@ class Particle {
         this.position = Vector.addition(this.position, this.velocity);
         this.velocity = Vector.addition(this.velocity, this.acceleration);
         this.acceleration = Vector.multiplication(this.acceleration, 0);
+        this.velocity = Vector.multiplication(this.velocity, 0.99);
     }
 
     handleEdges() {
