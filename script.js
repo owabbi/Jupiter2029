@@ -59,7 +59,7 @@ class Vector {
     }
 
     static substraction(vectorA, vectorB) {
-        return new Vector(vectorA.x - vectorA.x, vectorB.x - vectorB.y);
+        return new Vector(vectorA.x - vectorB.x, vectorA.y - vectorB.y);
     }
 
     //Produit scalaire
@@ -96,15 +96,27 @@ class Particle {
         this.acceleration = Vector.multiplication(this.acceleration, 0);
     }
 
-    handleEdges(width, height) {
-        if (this.position.x - this.radius <= 0 || this.position.x + this.radius >= width) {
+    handleEdges() {
+        var rockbottom = canvas.height - this.radius;
+        var allright = canvas.width - this.radius;
+
+        if (this.position.x - this.radius <= 0) {
             this.velocity.x = -this.velocity.x;
-        } else if (this.position.y - this.radius <= 0 || this.position.y + this.radius >= height) {
+            this.position.x = this.radius
+        }
+        if (this.position.x >= allright) {
+            this.position.x = allright;
+            this.velocity.x = -this.velocity.x;
+        }
+        if (this.position.y - this.radius <= 0) {
+            this.position.y = this.radius;
             this.velocity.y = -this.velocity.y;
         }
+        if (this.position.y > rockbottom) {
+            this.velocity.y = -this.velocity.y;
+            this.position.y = rockbottom;
+        }
     }
-
-
     draw() {
         ctx.beginPath();
         ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
@@ -112,14 +124,89 @@ class Particle {
         ctx.fill();
     }
 
+    checkCollision(particle) {
+        const v = Vector.substraction(this.position, particle.position);
+        const distance = v.mag();
+
+        if (distance <= this.radius + particle.radius) {
+            const unitNormal = Vector.division(v, v.mag());
+            const unitTangent = unitNormal.getTangent();
+
+            const correction = Vector.multiplication(unitNormal, this.radius + particle.radius);
+            const newV = Vector.addition(particle.position, correction);
+            this.position = newV;
+
+            const a = this.velocity;
+            const b = particle.velocity;
+
+            const a_n = a.dot(unitNormal);
+            const b_n = b.dot(unitNormal);
+            const a_t = a.dot(unitTangent);
+            const b_t = b.dot(unitTangent);
+
+            const a_n_final = (a_n * (this.radius - particle.radius) +
+                2 * particle.radius * b_n) / (this.radius + particle.radius);
+            const b_n_final = (b_n * (particle.radius - this.radius) +
+                2 * this.radius * a_n) / (this.radius + particle.radius);
+
+            const a_n_after = Vector.multiplication(unitNormal, a_n_final);
+            const b_n_after = Vector.multiplication(unitNormal, b_n_final);
+            const a_t_after = Vector.multiplication(unitTangent, a_t);
+            const b_t_after = Vector.multiplication(unitTangent, b_t);
+
+            const a_after = Vector.addition(a_n_after, a_t_after);
+            const b_after = Vector.addition(b_n_after, b_t_after);
+
+            this.velocity = a_after;
+            particle.velocity = b_after;
+        }
+    }
+
+}
+
+class GravityBall extends Particle {
+    constructor(positionX, positionY) {
+        super(positionX, positionY);
+        this.velocity = new Vector(0, 0);
+        this.acceleration = new Vector(0, 0);
+        this.color = "red";
+    }
+
+    update() {
+        super.update();
+        this.acceleration.y += 0.25;
+        this.velocity.x *= 0.97;
+    }
+
+    handleEdges() {
+        var rockbottom = canvas.height - this.radius;
+        var allright = canvas.width - this.radius;
+
+        if (this.position.x - this.radius <= 0) {
+            this.position.x = this.radius
+        }
+        if (this.position.x >= allright) {
+            this.position.x = allright;
+        }
+        if (this.position.y > rockbottom) {
+            this.position.y = rockbottom;
+        }
+    }
 }
 
 function updateArea() {
     Area.clear();
     for (let index = 0; index < particles.length; index++) {
-        particles[index].update();
-        particles[index].handleEdges(canvas.width, canvas.height);
-        particles[index].draw();
+
+        const current = particles[index];
+
+        const rest = particles.slice(index + 1);
+        for (let p of rest) {
+            p.checkCollision(current);
+        }
+        current.update();
+        current.handleEdges(canvas.width, canvas.height);
+        current.draw();
     }
 
 
@@ -130,14 +217,11 @@ document.getElementById("canvas").addEventListener("click", CircleAppear);
 document.getElementById("canvas").addEventListener("mousemove", UpdateCoords);
 
 function CircleAppear(event) {
-    var positionX = Math.floor(Math.random() * 1000);
-    var positionY = Math.floor(Math.random() * 500);
-
     var x = event.clientX;
     var y = event.clientY;
     var coords = "X coords : " + x + ", Y coords : " + y;
     if (GumBallFlag == true) {
-        var newCircle = new Particle(x, y);
+        var newCircle = new GravityBall(x, y);
         particles.push(newCircle);
         newCircle.draw();
     } else {
