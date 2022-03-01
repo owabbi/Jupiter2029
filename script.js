@@ -1,4 +1,4 @@
-var circles = [];
+var particles = [];
 var pCoords = document.getElementById("coords");
 var canvas = document.getElementById("canvas");
 var startBtn = document.getElementById("startBtn");
@@ -37,108 +37,177 @@ function StopGravity() {
     Area.stop();
 }
 
+function randomNumBetween(min, max) {
+    return min + Math.random() * (max - min);
+}
 
-class circle {
-    constructor(positionX, positionY, radius) {
-        this.x = positionX;
-        this.y = positionY;
-        this.radius = radius;
-        this.color = "red";
-        this.speedX = 0;
-        this.speedY = 0;
-
-        this.gravity = 0.05;
-        this.gravitySpeed = 0;
+class Vector {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    static addition(vectorA, vectorB) {
+        return new Vector(vectorA.x + vectorB.x, vectorA.y + vectorB.y);
     }
 
-    draw = function() {
+    static multiplication(vector, value) {
+        return new Vector(vector.x * value, vector.y * value);
+    }
 
+    static division(vector, value) {
+        return new Vector(vector.x / value, vector.y / value);
+    }
+
+    static substraction(vectorA, vectorB) {
+        return new Vector(vectorA.x - vectorB.x, vectorA.y - vectorB.y);
+    }
+
+    //Produit scalaire
+    dot(vector) {
+        return this.x * vector.x + this.y * vector.y;
+    }
+
+    //Vecteur tangent
+    getTangent() {
+        return new Vector(-this.y, this.x);
+    }
+
+    //Norme
+    mag() {
+        return Math.sqrt((this.x * this.x) + (this.y * this.y));
+    }
+
+    static random(minX, maxX, minY, maxY) {
+        return new Vector(randomNumBetween(minX, maxX), randomNumBetween(minY, maxY));
+    }
+}
+
+class Particle {
+    constructor(positionX, positionY) {
+        this.position = new Vector(positionX, positionY);
+        this.velocity = Vector.random(-1, 1, -1, 1);
+        this.acceleration = new Vector(0, 0);
+        this.radius = 20;
+        this.color = "green";
+    }
+    update() {
+        this.position = Vector.addition(this.position, this.velocity);
+        this.velocity = Vector.addition(this.velocity, this.acceleration);
+        this.acceleration = Vector.multiplication(this.acceleration, 0);
+        this.velocity = Vector.multiplication(this.velocity, 0.99);
+    }
+
+    handleEdges() {
+        var rockbottom = canvas.height - this.radius;
+        var allright = canvas.width - this.radius;
+
+        if (this.position.x - this.radius <= 0) {
+            this.velocity.x = -this.velocity.x;
+            this.position.x = this.radius
+        }
+        if (this.position.x >= allright) {
+            this.position.x = allright;
+            this.velocity.x = -this.velocity.x;
+        }
+        if (this.position.y - this.radius <= 0) {
+            this.position.y = this.radius;
+            this.velocity.y = -this.velocity.y;
+        }
+        if (this.position.y > rockbottom) {
+            this.velocity.y = -this.velocity.y;
+            this.position.y = rockbottom;
+        }
+    }
+    draw() {
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
         ctx.fillStyle = this.color;
         ctx.fill();
-
     }
 
-    update = function() {
-        this.gravitySpeed += this.gravity;
-        this.x += this.speedX;
-        this.y += this.speedY + this.gravitySpeed;
+    checkCollision(particle) {
+        const v = Vector.substraction(this.position, particle.position);
+        const distance = v.mag();
 
-        var rockbottom = canvas.height - this.radius;
+        if (distance <= this.radius + particle.radius) {
+            const unitNormal = Vector.division(v, v.mag());
+            const unitTangent = unitNormal.getTangent();
 
-        if (this.y > rockbottom) {
-            this.y = rockbottom;
+            const correction = Vector.multiplication(unitNormal, this.radius + particle.radius);
+            const newV = Vector.addition(particle.position, correction);
+            this.position = newV;
+
+            const a = this.velocity;
+            const b = particle.velocity;
+
+            const a_n = a.dot(unitNormal);
+            const b_n = b.dot(unitNormal);
+            const a_t = a.dot(unitTangent);
+            const b_t = b.dot(unitTangent);
+
+            const a_n_final = (a_n * (this.radius - particle.radius) +
+                2 * particle.radius * b_n) / (this.radius + particle.radius);
+            const b_n_final = (b_n * (particle.radius - this.radius) +
+                2 * this.radius * a_n) / (this.radius + particle.radius);
+
+            const a_n_after = Vector.multiplication(unitNormal, a_n_final);
+            const b_n_after = Vector.multiplication(unitNormal, b_n_final);
+            const a_t_after = Vector.multiplication(unitTangent, a_t);
+            const b_t_after = Vector.multiplication(unitTangent, b_t);
+
+            const a_after = Vector.addition(a_n_after, a_t_after);
+            const b_after = Vector.addition(b_n_after, b_t_after);
+
+            this.velocity = a_after;
+            particle.velocity = b_after;
         }
     }
 
 }
 
-class GumBall extends circle {
-
-    constructor(positionX, positionY, radius) {
-        super(positionX, positionY, radius);
-        this.speedX = Math.ceil(Math.random() * 2) * (Math.round(Math.random()) ? 1 : -1);
-        this.speedY = Math.ceil(Math.random() * 2) * (Math.round(Math.random()) ? 1 : -1);
-        this.color = "green";
-        this.gravity = 0;
+class GravityBall extends Particle {
+    constructor(positionX, positionY) {
+        super(positionX, positionY);
+        this.velocity = new Vector(0, 0);
+        this.acceleration = new Vector(0, 0);
+        this.color = "red";
     }
 
-    draw = function() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.beginPath();
-        if (GumBallArrowFlag == true) {
-            var angleTheta = Math.acos(this.speedX / (Math.sqrt((this.speedX * this.speedX) + (this.speedY * this.speedY))));
-            ctx.moveTo(this.x, this.y);
-            if (this.speedY < 0) {
-                ctx.lineTo(this.x + this.radius * Math.cos(angleTheta), this.y + this.radius * Math.sin(angleTheta + Math.PI));
-            } else {
-
-                ctx.lineTo(this.x + this.radius * Math.cos(angleTheta), this.y + this.radius * Math.sin(angleTheta));
-            }
-            ctx.stroke();
-        }
-
+    update() {
+        super.update();
+        this.acceleration.y += 0.25;
+        this.velocity.x *= 0.97;
     }
 
-    update = function() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-
+    handleEdges() {
         var rockbottom = canvas.height - this.radius;
+        var allright = canvas.width - this.radius;
 
-        var rightblock = canvas.width - this.radius;
-
-        if (this.y > rockbottom) {
-            this.y = rockbottom;
-            this.speedY = -this.speedY;
+        if (this.position.x - this.radius <= 0) {
+            this.position.x = this.radius
         }
-
-        if (this.y < this.radius) {
-            this.y = this.radius;
-            this.speedY = -this.speedY;
+        if (this.position.x >= allright) {
+            this.position.x = allright;
         }
-
-        if (this.x > rightblock) {
-            this.x = rightblock;
-            this.speedX = -this.speedX;
-        }
-
-        if (this.x < this.radius) {
-            this.x = this.radius;
-            this.speedX = -this.speedX;
+        if (this.position.y > rockbottom) {
+            this.position.y = rockbottom;
         }
     }
 }
 
 function updateArea() {
     Area.clear();
-    for (let index = 0; index < circles.length; index++) {
-        circles[index].update();
-        circles[index].draw();
+    for (let index = 0; index < particles.length; index++) {
+
+        const current = particles[index];
+
+        const rest = particles.slice(index + 1);
+        for (let p of rest) {
+            p.checkCollision(current);
+        }
+        current.update();
+        current.handleEdges(canvas.width, canvas.height);
+        current.draw();
     }
 
 
@@ -149,26 +218,23 @@ document.getElementById("canvas").addEventListener("click", CircleAppear);
 document.getElementById("canvas").addEventListener("mousemove", UpdateCoords);
 
 function CircleAppear(event) {
-    var positionX = Math.floor(Math.random() * 1000);
-    var positionY = Math.floor(Math.random() * 500);
-
     var x = event.clientX;
     var y = event.clientY;
     var coords = "X coords : " + x + ", Y coords : " + y;
     if (GumBallFlag == true) {
-        var newCircle = new GumBall(x, y, 20);
-        circles.push(newCircle);
+        var newCircle = new GravityBall(x, y);
+        particles.push(newCircle);
         newCircle.draw();
     } else {
-        var newCircle = new circle(x, y, 20);
-        circles.push(newCircle);
+        var newCircle = new Particle(x, y);
+        particles.push(newCircle);
         newCircle.draw();
     }
 
     pCoords.innerHTML = coords;
 
 
-    var CircleNumber = circles.length;
+    var CircleNumber = particles.length;
     elementNumber.innerHTML = "Currently " + CircleNumber;
 }
 
@@ -215,11 +281,11 @@ function AddGumBalls(event) {
             var positionX = Math.floor(Math.random() * 1000);
             var positionY = Math.floor(Math.random() * 500);
 
-            var newCircle = new GumBall(positionX, positionY, 20);
-            circles.push(newCircle);
+            var newCircle = new Particle(positionX, positionY);
+            particles.push(newCircle);
             newCircle.draw();
             counter++;
-            var CircleNumber = circles.length;
+            var CircleNumber = particles.length;
             elementNumber.innerHTML = "Currently " + CircleNumber;
         }
     }
