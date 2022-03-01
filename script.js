@@ -6,7 +6,7 @@ var stopBtn = document.getElementById("stopBtn");
 var elementNumber = document.getElementById("number");
 var ctx = canvas.getContext("2d");
 var GumBallFlag = false;
-var GumBallArrowFlag = false;
+var GridFlag = false;
 
 var Area = {
 
@@ -94,7 +94,7 @@ class Particle {
         this.position = Vector.addition(this.position, this.velocity);
         this.velocity = Vector.addition(this.velocity, this.acceleration);
         this.acceleration = Vector.multiplication(this.acceleration, 0);
-        this.velocity = Vector.multiplication(this.velocity, 0.99);
+        this.velocity = Vector.multiplication(this.velocity, 1);
     }
 
     handleEdges() {
@@ -210,6 +210,15 @@ function updateArea() {
         current.draw();
     }
 
+    if(GridFlag == true)
+    {
+        canvas.style.backgroundImage = "repeating-linear-gradient(#ccc 0 1px, transparent 1px 100%), repeating-linear-gradient(90deg, #ccc 0 1px, transparent 1px 100%)";
+        canvas.style.backgroundSize = "50px 50px";
+    }
+    else{
+        canvas.style.backgroundSize = "0";
+    }
+
 
 }
 
@@ -248,27 +257,21 @@ function UpdateCoords(event) {
 
 function SwitchToGumBall() {
     var GumBallCheck = document.getElementById("GumBall");
-    var showArrow = document.getElementById("showArrow");
-    var GumBallArrow = document.getElementById("GumBallArrow");
     if (GumBallCheck.checked == true) {
         GumBallFlag = true;
-        showArrow.style.display = "block";
-        GumBallArrowFlag = true;
-        GumBallArrow.checked = true;
     } else {
         GumBallFlag = false
-        showArrow.style.display = "none";
-        GumBallArrowFlag = false
     }
 
 }
 
-function ShowGumballArrows() {
-    var GumBallArrow = document.getElementById("GumBallArrow");
-    if (GumBallArrow.checked == true) {
-        GumBallArrowFlag = true;
+function ShowGrid() {
+    var Grid = document.getElementById("Grid");
+    console.log("GridON");
+    if (Grid.checked == true) {
+        GridFlag = true;
     } else {
-        GumBallArrowFlag = false;
+        GridFlag = false;
     }
 }
 
