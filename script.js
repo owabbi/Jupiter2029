@@ -1,4 +1,5 @@
 var particles = [];
+
 var pCoords = document.getElementById("coords");
 var canvas = document.getElementById("canvas");
 var startBtn = document.getElementById("startBtn");
@@ -8,6 +9,8 @@ var ctx = canvas.getContext("2d");
 var GumBallFlag = false;
 var GumBallArrowFlag = false;
 
+
+var graph = [];
 var Area = {
 
     start: function() {
@@ -89,12 +92,14 @@ class Particle {
         this.acceleration = new Vector(0, 0);
         this.radius = 20;
         this.color = "green";
+
     }
     update() {
         this.position = Vector.addition(this.position, this.velocity);
         this.velocity = Vector.addition(this.velocity, this.acceleration);
         this.acceleration = Vector.multiplication(this.acceleration, 0);
         this.velocity = Vector.multiplication(this.velocity, 0.99);
+
     }
 
     handleEdges() {
@@ -209,13 +214,22 @@ function updateArea() {
         current.handleEdges(canvas.width, canvas.height);
         current.draw();
     }
-
+    if (graph.length != 0 && GumBallArrowFlag == true) {
+        ctx.beginPath();
+        ctx.moveTo(graph[0][0], graph[0][1]);
+        for (let index = 0; index < graph.length; index++) {
+            ctx.lineTo(graph[index][0], graph[index][1]);
+            ctx.moveTo(graph[index][0], graph[index][1]);
+        }
+        ctx.stroke();
+    }
 
 }
 
 
 document.getElementById("canvas").addEventListener("click", CircleAppear);
 document.getElementById("canvas").addEventListener("mousemove", UpdateCoords);
+document.getElementById("canvas").addEventListener("mousedown", Draw);
 
 function CircleAppear(event) {
     var x = event.clientX;
@@ -225,6 +239,9 @@ function CircleAppear(event) {
         var newCircle = new GravityBall(x, y);
         particles.push(newCircle);
         newCircle.draw();
+        if (particles.length == 1) {
+
+        }
     } else {
         var newCircle = new Particle(x, y);
         particles.push(newCircle);
@@ -244,6 +261,14 @@ function UpdateCoords(event) {
     var coords = "X coords : " + x + ", Y coords : " + y;
 
     pCoords.innerHTML = coords;
+}
+
+function Draw(event) {
+
+    var x = event.clientX;
+    var y = event.clientY;
+
+    graph.push([x, y]);
 }
 
 function SwitchToGumBall() {
