@@ -37,6 +37,13 @@ function distToSegment(p, v, w) {
     }));
 }
 
+function getMousePosition(event) {
+    var x = event.clientX;
+    var y = event.clientY;
+    var trueX = x - 500;
+return [trueX, y];
+}
+
 var Area = {
 
     start: function() {
@@ -392,8 +399,9 @@ document.getElementById("canvas").addEventListener("mousemove", UpdateCoords);
 document.getElementById("canvas").addEventListener("dblclick", DblClick);
 
 function CircleAppear(event) {
-    var x = event.clientX;
-    var y = event.clientY;
+    var MousPosition = getMousePosition(event);
+    var x = MousPosition[0];
+    var y = MousPosition[1];
     var coords = "X coords : " + x + ", Y coords : " + y;
     if (EnableDrawLine == false) {
 
@@ -437,8 +445,9 @@ function CircleAppear(event) {
 }
 
 function UpdateCoords(event) {
-    var x = event.clientX;
-    var y = event.clientY;
+    var MousPosition = getMousePosition(event);
+    var x = MousPosition[0];
+    var y = MousPosition[1];
     var coords = "X coords : " + x + ", Y coords : " + y;
 
     pCoords.innerHTML = coords;
@@ -498,7 +507,7 @@ function SetDrawLine() {
     }
 }
 
-function AddGumBalls(event) {
+function AddGumBalls() {
     var GumBallNbr = document.getElementById("AddGumBallNbr").value;
     if (GumBallNbr < 101) {
         var counter = 0;
